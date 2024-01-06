@@ -1,0 +1,11 @@
+{
+  "domain": "lightcast",
+  "name": "Light Cast",
+  "codeowners": ["@relvacode"],
+  "dependencies": [],
+  "requirements": ["aiohttp", "colorgram.py"],
+  "documentation": "https://github.com/relvacode/LightCast#readme",
+  "issue_tracker": "https://github.com/relvacode/LightCast/issues",
+  "version": "0.1.0",
+  "integration_type": "entity"
+}

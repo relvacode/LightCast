@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "lightcast"
+version = "0.1.0"
+description = ""
+authors = ["Jason Kingsbury <jason@relva.co.uk>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.11.0,<3.13"
+
+
+[tool.poetry.group.dev.dependencies]
+aiohttp = "^3.9.1"
+colorgram-py = "^1.2.0"
+homeassistant = "^2024.1.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
