@@ -1,6 +1,6 @@
 {
   "domain": "lightcast",
-  "name": "Light Cast",
+  "name": "LightCast",
   "codeowners": ["@relvacode"],
   "requirements": ["aiohttp", "colorgram.py"],
   "documentation": "https://github.com/relvacode/LightCast#readme",
