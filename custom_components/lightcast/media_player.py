@@ -89,7 +89,10 @@ class LightCastPlayer(MediaPlayerEntity):
             return
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(media_id) as response:
+            async with session.get(media_id,
+                                   raise_for_status=True,
+                                   timeout=aiohttp.ClientTimeout(total=30, connect=5)
+                                   ) as response:
                 response_data = await response.read()
 
         n_colors = len(valid_entities)
