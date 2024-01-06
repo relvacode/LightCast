@@ -35,6 +35,7 @@ async def async_setup_platform(
         hass,
         config[const.CONF_NAME],
         config[const.CONF_TARGET],
+        config.get(const.CONF_FILTER_ON) or False
     )
 
     add_entities([cast_device])
@@ -45,10 +46,11 @@ class LightCastPlayer(MediaPlayerEntity):
     _attr_supported_features = MediaPlayerEntityFeature.PLAY_MEDIA | MediaPlayerEntityFeature.BROWSE_MEDIA
     _attr_device_class = MediaPlayerDeviceClass.TV
 
-    def __init__(self, hass: HomeAssistant, name: str, device_target: str) -> None:
+    def __init__(self, hass: HomeAssistant, name: str, device_target: str, filter_on: bool) -> None:
         self.hass = hass
-        self.device_target = device_target
         self._attr_name = name
+        self.device_target = device_target
+        self.filter_on = filter_on
 
     async def async_browse_media(self, media_content_type: str | None = None,
                                  media_content_id: str | None = None) -> BrowseMedia:
@@ -78,13 +80,12 @@ class LightCastPlayer(MediaPlayerEntity):
         found_entities = expand_entities(self.hass, self.device_target)
         _LOGGER.info('Found %d entities matching %s', len(found_entities), self.device_target)
 
-        if not found_entities:
-            _LOGGER.warning('No entities were matched')
-            return
+        valid_entities = found_entities
+        if self.filter_on:
+            valid_entities = [e for e in found_entities if e.state == 'on']
 
-        valid_entities = [e for e in found_entities if e.state == 'on']
         if not valid_entities:
-            _LOGGER.warning('No targets are on')
+            _LOGGER.warning('No entities were matched')
             return
 
         async with aiohttp.ClientSession() as session:

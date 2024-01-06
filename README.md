@@ -20,6 +20,8 @@ media_player:
   - platform: lightcast
     name: Living Room LightCast
     target: area.living_room
+    # Enable filter_on to only consider lights that are already on
+    # filter_on: false
 ```
 
 Target can be a light, area, group or device.
