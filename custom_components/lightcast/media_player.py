@@ -1,8 +1,6 @@
 import logging
 import io
-import itertools
 import aiohttp
-import colorgram
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -19,6 +17,7 @@ from homeassistant.components import light
 
 from . import const
 from .entity_resolver import expand_entities
+from .color_extract import extract_palette
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +34,8 @@ async def async_setup_platform(
         hass,
         config[const.CONF_NAME],
         config[const.CONF_TARGET],
-        config.get(const.CONF_FILTER_ON) or False
+        config.get(const.CONF_FILTER_ON) or False,
+        True if (downsample := config.get(const.CONF_DOWNSAMPLE)) is None else downsample,
     )
 
     add_entities([cast_device])
@@ -46,11 +46,12 @@ class LightCastPlayer(MediaPlayerEntity):
     _attr_supported_features = MediaPlayerEntityFeature.PLAY_MEDIA | MediaPlayerEntityFeature.BROWSE_MEDIA
     _attr_device_class = MediaPlayerDeviceClass.TV
 
-    def __init__(self, hass: HomeAssistant, name: str, device_target: str, filter_on: bool) -> None:
+    def __init__(self, hass: HomeAssistant, name: str, device_target: str, filter_on: bool, downsample: bool) -> None:
         self.hass = hass
         self._attr_name = name
         self.device_target = device_target
         self.filter_on = filter_on
+        self.downsample = downsample
 
     async def async_browse_media(self, media_content_type: str | None = None,
                                  media_content_id: str | None = None) -> BrowseMedia:
@@ -95,21 +96,16 @@ class LightCastPlayer(MediaPlayerEntity):
                                    ) as response:
                 response_data = await response.read()
 
-        n_colors = len(valid_entities)
-        _LOGGER.info('Downloaded image, extracting palette of %d colors', n_colors)
+        palette = extract_palette(io.BytesIO(response_data), len(valid_entities), downsample=self.downsample)
 
-        extracted_colors = colorgram.extract(io.BytesIO(response_data), n_colors)
-        _LOGGER.info('Extracted palette of %d colors from image', len(extracted_colors))
-
-        for e, color in zip(valid_entities, itertools.cycle(extracted_colors)):
-            rgb_color = [color.rgb.r, color.rgb.g, color.rgb.b]
-            _LOGGER.info('Set light %s to %s', e.entity_id, rgb_color)
+        for e, color in zip(valid_entities, palette):
+            _LOGGER.info('Set light %s to %s', e.entity_id, color)
             await self.hass.services.async_call(
                 light.DOMAIN,
                 light.SERVICE_TURN_ON,
                 {
                     ATTR_ENTITY_ID: e.entity_id,
-                    light.ATTR_RGB_COLOR: rgb_color
+                    light.ATTR_RGB_COLOR: color
                 }
             )
 

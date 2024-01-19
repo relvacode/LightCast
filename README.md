@@ -49,3 +49,13 @@ media_player:
     name: Office LightCast
     target: area.office
 ```
+
+It can take a while to extract the palette of very large images. Use `downsample` to downsample images to a width of `256`. The default is true.
+
+```yaml
+media_player:
+  - platform: lightcast
+    name: Living Room LightCast
+    target: area.living_room
+    # downsample: false
+```
